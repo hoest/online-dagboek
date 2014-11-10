@@ -47,7 +47,12 @@ class User(diary.db.Model):
 
   def generate_auth_token(self, expiration=600):
     s = Serializer(diary.app.config["SECRET_KEY"], expires_in=expiration)
-    return unicode(s.dumps({"id": self.id}), "utf-8")
+    user_data = {
+      "user_id": self.id,
+      "user_email": self.emailaddress,
+    }
+
+    return unicode(s.dumps(user_data), "utf-8")
 
   @staticmethod
   def verify_auth_token(token):
@@ -59,7 +64,7 @@ class User(diary.db.Model):
       return None  # valid token, but expired
     except BadSignature:
       return None  # invalid token
-    user = User.query.get(data["id"])
+    user = User.query.get(data["user_id"])
     return user
 
 
@@ -91,9 +96,8 @@ class Diary(diary.db.Model):
   # relations
   posts = diary.db.relationship("Post", lazy="dynamic")
 
-  def sorted_posts(self):
-    # return self.posts.order_by(Post.date.desc())
-    return self.posts.all()
+  def sorted_posts(self, limit, offset):
+    return self.posts.order_by(Post.date.desc(), Post.id).limit(limit).offset(offset).all()
 
 
 class Post(diary.db.Model):
