@@ -8,7 +8,6 @@ import functools
 mod = flask.Blueprint("api", __name__, url_prefix="/api/v1")
 
 
-
 @mod.route("/get_token", methods=["POST"])
 def get_token():
   token = {}
