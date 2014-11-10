@@ -1,11 +1,12 @@
+import datetime
 import diary
 import diary.api.models
 import flask
-import datetime
 import functools
 
 # Blueprint
 mod = flask.Blueprint("api", __name__, url_prefix="/api/v1")
+
 
 
 @mod.route("/get_token", methods=["POST"])
@@ -17,21 +18,26 @@ def get_token():
     if "facebook" not in facebook_obj or "auth" not in facebook_obj:
       return flask.jsonify(token)
 
+    facebook_token = facebook_obj["auth"]["accessToken"]
+    if facebook_token is None:
+      return flask.jsonify(token)
+
     fb_email = facebook_obj["facebook"]["email"]
     user = diary.api.models.User.query.filter_by(emailaddress=fb_email).first()
 
     if user is None:
       # new user
       user = diary.api.models.User()
-      user.emailaddress = fb_email
+    user.emailaddress = fb_email
     user.firstname = facebook_obj["facebook"]["first_name"]
     user.lastname = facebook_obj["facebook"]["last_name"]
-    user.facebook_id = facebook_obj["facebook"]["id"]
+    if user.facebook_id is None:
+      user.facebook_id = facebook_obj["facebook"]["id"]
     diary.db.session.add(user)
 
     auth = diary.api.models.Auth()
     auth.owner_id = user.id
-    auth.facebook_token = facebook_obj["auth"]["accessToken"]
+    auth.facebook_token = facebook_token
     auth.token = user.generate_auth_token()
     auth.modified = datetime.datetime.utcnow()
     diary.db.session.add(auth)
@@ -49,14 +55,19 @@ def authorized(fn):
   """
   @functools.wraps(fn)
   def decorated_function(*args, **kwargs):
+    # Unauthorized response
     unauth_resp = flask.jsonify({"message": "Unauthorized"})
     unauth_resp.status_code = 401
 
-    if "username" not in flask.request.authorization:
+    if flask.request.authorization is None:
       # Unauthorized
       return unauth_resp
 
-    auth_token = flask.request.authorization["username"]
+    if "password" not in flask.request.authorization:
+      # Unauthorized
+      return unauth_resp
+
+    auth_token = flask.request.authorization["password"]
     user = diary.api.models.User.verify_auth_token(auth_token)
     if user is None:
       # Unauthorized
@@ -70,7 +81,7 @@ def authorized(fn):
 @authorized
 def get_diaries(user):
   """
-  Return all diaries for a specific user_id
+  Return all diaries for a specific user
   """
   result = []
   for item in user.diaries:
@@ -90,14 +101,17 @@ def get_diaries(user):
 @authorized
 def get_posts(user, diary_id, page=0):
   """
-  Return all posts per diary for a specific user_id
+  Return all posts per diary for a specific user; sorted by date (DESC)
   """
-  result = []
   my_diary = user.diaries.filter_by(id=diary_id).first()
 
-  if user is None or my_diary is None:
-    return flask.jsonify({"posts": []})
+  if my_diary is None:
+    # Unauthorized response
+    unauth_resp = flask.jsonify({"message": "Unauthorized"})
+    unauth_resp.status_code = 401
+    return unauth_resp
 
+  result = []
   for item in my_diary.sorted_posts(10, page):
     pics = []
     for pic in item.pictures.all():

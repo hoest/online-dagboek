@@ -1,6 +1,6 @@
-import diary
 import datetime
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
+import diary
+import itsdangerous
 
 ROLE_USER = 0
 ROLE_ADMIN = 1
@@ -46,9 +46,11 @@ class User(diary.db.Model):
     return len(self.diaries.filter(Diary.id == diary_id).all()) is 1
 
   def generate_auth_token(self, expiration=600):
-    s = Serializer(diary.app.config["SECRET_KEY"], expires_in=expiration)
+    sec_key = diary.app.config["SECRET_KEY"]
+    s = itsdangerous.TimedJSONWebSignatureSerializer(sec_key, expires_in=expiration)
     user_data = {
       "user_id": self.id,
+      "user_facebook_id": self.facebook_id,
       "user_email": self.emailaddress,
     }
 
@@ -56,16 +58,18 @@ class User(diary.db.Model):
 
   @staticmethod
   def verify_auth_token(token):
-    s = Serializer(diary.app.config["SECRET_KEY"])
+    sec_key = diary.app.config["SECRET_KEY"]
+    s = itsdangerous.TimedJSONWebSignatureSerializer(sec_key)
 
     try:
       data = s.loads(token)
-    except SignatureExpired:
+    except itsdangerous.SignatureExpired:
       return None  # valid token, but expired
-    except BadSignature:
+    except itsdangerous.BadSignature:
       return None  # invalid token
     user = User.query.get(data["user_id"])
-    return user
+
+    return user if data["user_facebook_id"] == user.facebook_id else None
 
 
 class Auth(diary.db.Model):
