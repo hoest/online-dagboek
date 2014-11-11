@@ -3,6 +3,7 @@ import diary
 import diary.api.models
 import flask
 import functools
+import requests
 
 # Blueprint
 mod = flask.Blueprint("api", __name__, url_prefix="/api/v1")
@@ -10,6 +11,9 @@ mod = flask.Blueprint("api", __name__, url_prefix="/api/v1")
 
 @mod.route("/get_token", methods=["POST"])
 def get_token():
+  """
+  Gets a API token
+  """
   token = {}
   facebook_obj = flask.request.get_json()
 
@@ -18,7 +22,11 @@ def get_token():
       return flask.jsonify(token)
 
     facebook_token = facebook_obj["auth"]["accessToken"]
+    facebook_id = facebook_obj["facebook"]["id"]
     if facebook_token is None:
+      return flask.jsonify(token)
+
+    if not validate_fbtoken(facebook_id, facebook_token):
       return flask.jsonify(token)
 
     fb_email = facebook_obj["facebook"]["email"]
@@ -31,7 +39,7 @@ def get_token():
     user.firstname = facebook_obj["facebook"]["first_name"]
     user.lastname = facebook_obj["facebook"]["last_name"]
     if user.facebook_id is None:
-      user.facebook_id = facebook_obj["facebook"]["id"]
+      user.facebook_id = facebook_id
     diary.db.session.add(user)
 
     auth = diary.api.models.Auth()
@@ -46,6 +54,19 @@ def get_token():
     token["token"] = auth.token
 
   return flask.jsonify(token)
+
+
+def validate_fbtoken(id, token):
+  """
+  Validate Facebook access-token
+  """
+  payload = {
+    "access_token": token
+  }
+
+  r = requests.get("https://graph.facebook.com/me", verify=True, params=payload)
+  fb_json = r.json()
+  return "id" in fb_json and fb_json["id"] == id
 
 
 def authorized(fn):
