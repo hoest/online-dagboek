@@ -13,9 +13,11 @@ db = flask.ext.sqlalchemy.SQLAlchemy(app)
 
 # application imports
 import diary.api.views
+import diary.site.views
 
 # Register blueprints
 app.register_blueprint(diary.api.views.mod)
+app.register_blueprint(diary.site.views.mod)
 
 # create database tables
 db.create_all()
