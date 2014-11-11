@@ -83,7 +83,7 @@
           console.log('Successful login for: ', response);
           document.getElementById('status').innerHTML = 'Thanks for logging in, ' + response.name + '!';
           $.ajax({
-            url: "/api/v1/get_token",
+            url: "/api/v1/token",
             dataType: "json",
             type: "post",
             contentType: "application/json",
