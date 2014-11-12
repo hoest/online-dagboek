@@ -40,15 +40,19 @@ def get_token():
     user.lastname = facebook_obj["facebook"]["last_name"]
     if user.facebook_id is None:
       user.facebook_id = facebook_id
+
+    # add and commit user
     diary.db.session.add(user)
+    diary.db.session.commit()
 
     auth = diary.api.models.Auth()
     auth.owner_id = user.id
     auth.facebook_token = facebook_token
     auth.token = user.generate_auth_token()
     auth.modified = datetime.datetime.utcnow()
-    diary.db.session.add(auth)
 
+    # add and commit auth_token
+    diary.db.session.add(auth)
     diary.db.session.commit()
 
     token["token"] = auth.token

@@ -92,6 +92,9 @@
               "auth": auth
             }),
             success: function(data, textStatus, jQxhr) {
+              var img = $("<img />").attr("src", "http://graph.facebook.com/" + response["id"] + "/picture");
+              $("#output").append(img)
+
               $.ajax({
                 url: "/api/v1/diaries",
                 dataType: "json",
@@ -101,8 +104,6 @@
                   xhr.setRequestHeader("Authorization", "Basic " + btoa("token:" + data.token));
                 },
                 success: function(data, textStatus, jQxhr) {
-                  var img = $("<img />").attr("src", "http://graph.facebook.com/" + response["id"] + "/picture");
-                  $("#output").append(img)
                   $(data.diaries).each(function() {
                     var div = $("<div />").html(this["id"] + ": " + this["title"]);
                     $("#output").append(div)
