@@ -108,16 +108,39 @@ def get_diaries(user):
   Return all diaries for a specific user
   """
   result = []
-  for item in user.diaries:
-    result.append({
-      "id": item.id,
-      "owner_id": item.owner_id,
-      "title": item.title,
-      "slug": item.slug,
-      "created": item.created,
-    })
+  for d in user.diaries:
+    result.append(d.to_dict())
 
   return flask.jsonify({"diaries": result})
+
+
+@mod.route("/diaries", methods=["POST"])
+@mod.route("/diaries/<int:diary_id>", methods=["PUT"])
+@authorized
+def create_diary(user, diary_id=None):
+  """
+  Create a diary
+  """
+  json_obj = flask.request.get_json()
+
+  # JSON not complete/valid
+  if "title" not in json_obj:
+    return flask.jsonify({"message": "Title is required"})
+
+  d = None
+  if diary_id is None:
+    d = diary.api.models.Diary()
+  else:
+    d = diary.api.models.Diary.query.get(diary_id)
+
+  d.title = json_obj["title"]
+  d.owner_id = user.id
+  d.users.append(user)
+
+  diary.db.session.add(d)
+  diary.db.session.commit()
+
+  return flask.jsonify(d.to_dict())
 
 
 @mod.route("/diaries/<int:diary_id>/posts", methods=["GET"])
@@ -136,26 +159,47 @@ def get_posts(user, diary_id, page=0):
     return unauth_resp
 
   result = []
-  for item in my_diary.sorted_posts(10, page):
-    pics = []
-    for pic in item.pictures.all():
-      pics.append({
-        "id": pic.id,
-        "title": pic.title,
-        "file_url": pic.file_url,
-        "thumb_url": pic.thumb_url,
-      })
-
-    result.append({
-      "id": item.id,
-      "user_id": item.user_id,
-      "diary_id": item.diary_id,
-      "title": item.title,
-      "body": item.body,
-      "date": item.date.isoformat(),
-      "created": item.created.isoformat(),
-      "modified": item.modified.isoformat(),
-      "pictures": pics,
-    })
+  for p in my_diary.sorted_posts(10, page):
+    result.append(p.to_dict())
 
   return flask.jsonify({"posts": result})
+
+
+@mod.route("/diaries/<int:diary_id>/posts", methods=["POST"])
+@mod.route("/diaries/<int:diary_id>/posts/<int:post_id>", methods=["PUT"])
+@authorized
+def create_post(user, diary_id=None, post_id=None):
+  """
+  Create a post
+  """
+  my_diary = user.diaries.filter_by(id=diary_id).first()
+
+  if my_diary is None:
+    # Unauthorized response
+    unauth_resp = flask.jsonify({"message": "Unauthorized"})
+    unauth_resp.status_code = 401
+    return unauth_resp
+
+  json_obj = flask.request.get_json()
+
+  # JSON not complete/valid
+  if "title" not in json_obj or "body" not in json_obj or "date" not in json_obj:
+    return flask.jsonify({"message": "Title, body and date are required"})
+
+  p = None
+  if post_id is None:
+    p = diary.api.models.Post()
+  else:
+    p = diary.api.models.Post.query.get(post_id)
+    p.modified = datetime.datetime.now()
+
+  p.title = json_obj["title"]
+  p.body = json_obj["body"]
+  p.date = json_obj["date"]
+  p.user_id = user.id
+  p.diary_id = diary_id
+
+  diary.db.session.add(p)
+  diary.db.session.commit()
+
+  return flask.jsonify(p.to_dict())

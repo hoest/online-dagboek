@@ -94,14 +94,21 @@ class Diary(diary.db.Model):
   id = diary.db.Column(diary.db.Integer, primary_key=True)
   owner_id = diary.db.Column(diary.db.Integer, diary.db.ForeignKey("user.id"))
   title = diary.db.Column(diary.db.Unicode(1024), nullable=False, index=True)
-  slug = diary.db.Column(diary.db.Unicode(256), nullable=False, unique=True)
   created = diary.db.Column(diary.db.DateTime, default=datetime.datetime.utcnow)
 
   # relations
   posts = diary.db.relationship("Post", lazy="dynamic")
 
   def sorted_posts(self, limit, offset):
-    return self.posts.order_by(Post.date.desc(), Post.id).limit(limit).offset(offset).all()
+    return self.posts.order_by(Post.date.desc(), Post.id.desc()).limit(limit).offset(offset).all()
+
+  def to_dict(self):
+    return {
+      "id": self.id,
+      "owner_id": self.owner_id,
+      "title": self.title,
+      "created": self.created,
+    }
 
 
 class Post(diary.db.Model):
@@ -122,6 +129,23 @@ class Post(diary.db.Model):
   # relations
   pictures = diary.db.relationship("Picture", lazy="dynamic")
 
+  def to_dict(self):
+    pics = []
+    for pic in self.pictures.all():
+      pics.append(pic.to_dict())
+
+    return {
+      "id": self.id,
+      "user_id": self.user_id,
+      "diary_id": self.diary_id,
+      "title": self.title,
+      "body": self.body,
+      "date": self.date.isoformat(),
+      "created": self.created.isoformat(),
+      "modified": self.modified.isoformat(),
+      "pictures": pics,
+    }
+
 
 class Picture(diary.db.Model):
   """
@@ -134,3 +158,11 @@ class Picture(diary.db.Model):
   title = diary.db.Column(diary.db.Unicode(1024), nullable=False, index=True)
   file_url = diary.db.Column(diary.db.Unicode(1024), nullable=False)
   thumb_url = diary.db.Column(diary.db.Unicode(1024), nullable=True)
+
+  def to_dict(self):
+    return {
+      "id": self.id,
+      "title": self.title,
+      "file_url": self.file_url,
+      "thumb_url": self.thumb_url,
+    }
