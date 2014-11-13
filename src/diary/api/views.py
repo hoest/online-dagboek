@@ -103,7 +103,7 @@ def authorized(fn):
 
 @mod.route("/diaries", methods=["GET"])
 @authorized
-def get_diaries(user):
+def read_diaries(user):
   """
   Return all diaries for a specific user
   """
@@ -117,7 +117,7 @@ def get_diaries(user):
 @mod.route("/diaries", methods=["POST"])
 @mod.route("/diaries/<int:diary_id>", methods=["PUT"])
 @authorized
-def create_diary(user, diary_id=None):
+def create_or_update_diary(user, diary_id=None):
   """
   Create a diary
   """
@@ -146,7 +146,7 @@ def create_diary(user, diary_id=None):
 @mod.route("/diaries/<int:diary_id>/posts", methods=["GET"])
 @mod.route("/diaries/<int:diary_id>/posts/<int:page>", methods=["GET"])
 @authorized
-def get_posts(user, diary_id, page=0):
+def read_posts(user, diary_id, page=0):
   """
   Return all posts per diary for a specific user; sorted by date (DESC)
   """
@@ -168,7 +168,7 @@ def get_posts(user, diary_id, page=0):
 @mod.route("/diaries/<int:diary_id>/posts", methods=["POST"])
 @mod.route("/diaries/<int:diary_id>/posts/<int:post_id>", methods=["PUT"])
 @authorized
-def create_post(user, diary_id=None, post_id=None):
+def create_or_update_post(user, diary_id=None, post_id=None):
   """
   Create a post
   """
