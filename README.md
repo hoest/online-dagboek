@@ -1,4 +1,4 @@
 online-dagboek
 ==============
 
-Rest API for www.online-dagboek.nl
+API and frontend for www.online-dagboek.nl
