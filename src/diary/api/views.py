@@ -131,7 +131,13 @@ def create_or_update_diary(user, diary_id=None):
   if diary_id is None:
     d = diary.api.models.Diary()
   else:
-    d = diary.api.models.Diary.query.get(diary_id)
+    d = user.diaries.filter_by(id=diary_id).first()
+
+  if d is None:
+    # Unauthorized response
+    unauth_resp = flask.jsonify({"message": "Unauthorized"})
+    unauth_resp.status_code = 401
+    return unauth_resp
 
   d.title = json_obj["title"]
   d.owner_id = user.id
@@ -143,6 +149,26 @@ def create_or_update_diary(user, diary_id=None):
   return flask.jsonify(d.to_dict())
 
 
+@mod.route("/diaries/<int:diary_id>", methods=["DELETE"])
+@authorized
+def delete_diary(user, diary_id):
+  """
+  Delete a diary
+  """
+  d = user.diaries.filter_by(id=diary_id).first()
+
+  if d is None or d.owner_id is not user.id:
+    # Unauthorized response
+    unauth_resp = flask.jsonify({"message": "Unauthorized"})
+    unauth_resp.status_code = 401
+    return unauth_resp
+
+  diary.db.session.delete(d)
+  diary.db.session.commit()
+
+  return flask.jsonify({"id": diary_id, "message": "Diary removed"})
+
+
 @mod.route("/diaries/<int:diary_id>/posts", methods=["GET"])
 @mod.route("/diaries/<int:diary_id>/posts/<int:page>", methods=["GET"])
 @authorized
@@ -150,16 +176,16 @@ def read_posts(user, diary_id, page=0):
   """
   Return all posts per diary for a specific user; sorted by date (DESC)
   """
-  my_diary = user.diaries.filter_by(id=diary_id).first()
+  d = user.diaries.filter_by(id=diary_id).first()
 
-  if my_diary is None:
+  if d is None:
     # Unauthorized response
     unauth_resp = flask.jsonify({"message": "Unauthorized"})
     unauth_resp.status_code = 401
     return unauth_resp
 
   result = []
-  for p in my_diary.sorted_posts(10, page):
+  for p in d.sorted_posts(10, page):
     result.append(p.to_dict())
 
   return flask.jsonify({"posts": result})
@@ -172,9 +198,9 @@ def create_or_update_post(user, diary_id=None, post_id=None):
   """
   Create a post
   """
-  my_diary = user.diaries.filter_by(id=diary_id).first()
+  d = user.diaries.filter_by(id=diary_id).first()
 
-  if my_diary is None:
+  if d is None:
     # Unauthorized response
     unauth_resp = flask.jsonify({"message": "Unauthorized"})
     unauth_resp.status_code = 401
@@ -195,7 +221,7 @@ def create_or_update_post(user, diary_id=None, post_id=None):
 
   p.title = json_obj["title"]
   p.body = json_obj["body"]
-  p.date = json_obj["date"]
+  p.date = datetime.datetime.strptime(json_obj["date"], "%Y-%m-%d")
   p.user_id = user.id
   p.diary_id = diary_id
 
@@ -203,3 +229,24 @@ def create_or_update_post(user, diary_id=None, post_id=None):
   diary.db.session.commit()
 
   return flask.jsonify(p.to_dict())
+
+
+@mod.route("/diaries/<int:diary_id>/posts/<int:post_id>", methods=["DELETE"])
+@authorized
+def delete_post(user, diary_id, post_id):
+  """
+  Delete a post
+  """
+  d = user.diaries.filter_by(id=diary_id).first()
+  p = user.posts.filter_by(id=post_id).first()
+
+  if d is None or p is None:
+    # Unauthorized response
+    unauth_resp = flask.jsonify({"message": "Unauthorized"})
+    unauth_resp.status_code = 401
+    return unauth_resp
+
+  diary.db.session.delete(p)
+  diary.db.session.commit()
+
+  return flask.jsonify({"id": post_id, "message": "Post removed"})
