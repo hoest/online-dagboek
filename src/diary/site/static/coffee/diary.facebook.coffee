@@ -3,22 +3,20 @@
 ###
 Facebook button
 ###
-window.user =
-  "id": -1
-  "first_name": null
-  "last_name": null
-  "token": null
-
 window.statusChangeCallback = (response) ->
   # Logged into your app and Facebook.
   if response.status is "connected"
     register(response.authResponse)
   else
-    window.user =
+    # event
+    event = new CustomEvent "loggedIn", "detail": {
       "id": -1
       "first_name": null
       "last_name": null
       "token": null
+    }
+    console.log "1"
+    document.dispatchEvent event
 
 window.checkLoginState = ->
   FB.getLoginStatus (response) ->
@@ -53,13 +51,12 @@ window.register = (auth) ->
       if r?.response isnt ""
         # success
         token = JSON.parse r.responseText
-        # global
-        window.user =
+        # event
+        event = new CustomEvent "loggedIn", "detail":
           "id": response.id
           "first_name": response.first_name
           "last_name": response.last_name
           "token": token.token
-        event = new CustomEvent "loggedIn", "detail": window.user
         document.dispatchEvent event
 
 # Load the SDK asynchronously

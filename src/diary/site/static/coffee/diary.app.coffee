@@ -11,26 +11,14 @@ diary.directive "diaryNavigation", ->
     <li><a href="#/over-deze-site">Over deze site</a></li>
   </ul>"""
 
-diary.directive "diaryContent", ["$window", "$compile", ($window, $compile) ->
+diary.directive "diaryContent", ->
   controller: ($scope) ->
-    $scope.user = $window.user
     angular.element(document).on "loggedIn", (e) ->
       $scope.$broadcast "diary::loggedIn"
       $scope.user = e.detail
-      $window.user = e.detail
+      $scope.$apply()
 
-    console.log "1", $window.user.id
-    $scope.$on "diary::loggedIn", (event) ->
-      console.log "2", $window.user.id
-      $scope.user = event.targetScope.user
-      $window.user = event.targetScope.user
-
-  link: (scope, element) ->
-    element.html("""<div>Hier komt de inhoud: <span ng-model="user">{{user.id}}</span></div>""")
-    $compile(element.contents())(scope)
-
-  # template: """<div ng-model="user">Hier komt de inhoud: {{user}}</div>"""
-]
+  template: """<div>Welkom {{user}}</div>"""
 
 diary.directive "diaryFooter", ->
   template: """<p>&#169; 2014 - <a href="http://www.online-dagboek.nl/">www.online-dagboek.nl</a></p>"""
