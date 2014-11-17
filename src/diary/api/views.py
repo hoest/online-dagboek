@@ -146,7 +146,10 @@ def create_or_update_diary(user, diary_id=None):
   diary.db.session.add(d)
   diary.db.session.commit()
 
-  return flask.jsonify(d.to_dict())
+  resp = flask.jsonify(d.to_dict())
+  if diary_id is None:
+    resp.status_code = 201
+  return resp
 
 
 @mod.route("/diaries/<int:diary_id>", methods=["DELETE"])
@@ -228,7 +231,10 @@ def create_or_update_post(user, diary_id=None, post_id=None):
   diary.db.session.add(p)
   diary.db.session.commit()
 
-  return flask.jsonify(p.to_dict())
+  resp = flask.jsonify(p.to_dict())
+  if post_id is None:
+    resp.status_code = 201
+  return resp
 
 
 @mod.route("/diaries/<int:diary_id>/posts/<int:post_id>", methods=["DELETE"])
