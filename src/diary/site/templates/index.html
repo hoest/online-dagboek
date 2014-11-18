@@ -2,28 +2,37 @@
 <html lang="nl" data-ng-app="diary">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>Online dagboek - online-dagboek.nl</title>
     <link rel="stylesheet" href="{{url_for('site.static', filename='css/style.css')}}" />
+
+    <script src="//code.angularjs.org/1.3.3/angular.min.js"
+            type="text/javascript" charset="utf-8"></script>
+    <script src="//code.angularjs.org/1.3.3/angular-route.min.js"
+            type="text/javascript" charset="utf-8"></script>
+    <script src="//code.angularjs.org/1.3.3/angular-resource.min.js"
+            type="text/javascript" charset="utf-8"></script>
+    <script src="//code.angularjs.org/1.3.3/i18n/angular-locale_nl-nl.js"
+            type="text/javascript" charset="utf-8"></script>
+    <script src="{{url_for('site.static', filename='lib/stmd.js')}}"
+            type="text/javascript" charset="utf-8"></script>
+    <script src="{{url_for('site.static', filename='lib/angular-commonmark.min.js')}}"
+            type="text/javascript" charset="utf-8"></script>
   </head>
   <body>
     <header>
-      <nav data-diary-navigation></nav>
-
+      <nav role="navigation" data-diary-navigation></nav>
       <div id="fb-root"></div>
-      <fb:login-button max_rows="1" size="medium" show_faces="false"
-                       auto_logout_link="true" default_audience="only_me"
-                       onlogin="checkLoginState();">
-      </fb:login-button>
+      <div class="fb-login-button" data-max-rows="1"
+           data-size="medium" data-show-faces="false"
+           data-auto-logout-link="true" data-onlogin="checkLoginState();">
+      </div>
     </header>
-    <main data-diary-content></main>
+    <main role="main" data-diary-content></main>
     <footer data-diary-footer></footer>
 
-    <script src="//code.angularjs.org/1.3.2/angular.min.js"
+    <script src="{{url_for('site.static', filename='js/diary.app.js')}}"
             type="text/javascript" charset="utf-8"></script>
     <script src="{{url_for('site.static', filename='js/diary.facebook.js')}}"
-            type="text/javascript" charset="utf-8"></script>
-    <script src="{{url_for('site.static', filename='js/diary.app.js')}}"
             type="text/javascript" charset="utf-8"></script>
   </body>
 </html>
