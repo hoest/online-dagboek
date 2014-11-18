@@ -45,6 +45,13 @@ diary.config ["$routeProvider", ($routeProvider) ->
             <time datetime="{{post.date}}">{{post.date|date:'fullDate'}}</time>
           </header>
           <section data-common-mark="post.body"></section>
+          <aside data-ng-if="post.pictures.length != 0">
+            <div class="image" data-ng-repeat="pic in post.pictures">
+              <a data-ng-href="{{pic.file_url}}">
+                <img data-ng-src="{{pic.thumb_url}}" alt="{{pic.title}}" title="{{pic.title}}" />
+              </a>
+            </div>
+          </aside>
         </article>
       </div>"""
 ]
@@ -124,7 +131,7 @@ diary.directive "facebookPicture", ["$rootScope", ($rootScope) ->
 
   restrict: "A"
   template: """<div class="facebook-picture" data-ng-if="user.token">
-    <a ng-href="//www.facebook.com/{{user.id}}">
+    <a data-ng-href="//www.facebook.com/{{user.id}}">
       <img data-ng-src="//graph.facebook.com/{{user.id}}/picture"
            alt="Profielfoto van {{user.first_name}}"
            title="Profielfoto van {{user.first_name}}" />
