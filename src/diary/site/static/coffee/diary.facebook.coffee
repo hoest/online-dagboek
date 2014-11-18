@@ -12,7 +12,7 @@ diary.run ["$rootScope", "$window", ($rootScope, $window) ->
 
   $window.fbAsyncInit = ->
     FB.init
-      "appId": "169415933126285"
+      "appId": "169415933126285" #240331372798385
       cookie: true
       xfbml: true
       version: "v2.1"
