@@ -3,34 +3,41 @@
 ###
 AngurlarJS App
 ###
-diary = angular.module "diary", []
+@diary = angular.module "diary", []
 
 diary.directive "diaryNavigation", ->
+  restrict: "A"
+
   template: """<ul>
     <li><a href="#/">Home</a></li>
     <li><a href="#/over-deze-site">Over deze site</a></li>
   </ul>"""
 
-diary.directive "diaryContent", ["$window", "$compile", ($window, $compile) ->
+diary.directive "diaryContent", ["$rootScope", ($rootScope) ->
   controller: ($scope) ->
-    $scope.user = $window.user
-    angular.element(document).on "loggedIn", (e) ->
-      $scope.$broadcast "diary::loggedIn"
-      $scope.user = e.detail
-      $window.user = e.detail
+    $scope.user = $rootScope.user
 
-    console.log "1", $window.user.id
-    $scope.$on "diary::loggedIn", (event) ->
-      console.log "2", $window.user.id
-      $scope.user = event.targetScope.user
-      $window.user = event.targetScope.user
+  restrict: "A"
 
-  link: (scope, element) ->
-    element.html("""<div>Hier komt de inhoud: <span ng-model="user">{{user.id}}</span></div>""")
-    $compile(element.contents())(scope)
-
-  # template: """<div ng-model="user">Hier komt de inhoud: {{user}}</div>"""
+  template: """<div ng-if="user.token">
+    <p>Welkom {{user.first_name}} ({{user.id}})</p>
+  </div>"""
 ]
 
 diary.directive "diaryFooter", ->
   template: """<p>&#169; 2014 - <a href="http://www.online-dagboek.nl/">www.online-dagboek.nl</a></p>"""
+
+diary.directive "facebookPicture", ["$rootScope", ($rootScope) ->
+  controller: ($scope) ->
+    $scope.user = $rootScope.user
+
+  restrict: "A"
+
+  template: """<div class="facebook-picture" ng-if="user.token">
+    <a href="//www.facebook.com/{{user.id}}">
+      <img src="//graph.facebook.com/{{user.id}}/picture"
+           alt="Profielfoto van {{user.first_name}}"
+           title="Profielfoto van {{user.first_name}}" />
+    </a>
+  </div>"""
+]
