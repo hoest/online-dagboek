@@ -3,7 +3,7 @@
 ###
 AngurlarJS App
 ###
-@diary = angular.module "diary", ["ngRoute", "ngResource"]
+@diary = angular.module "diary", ["ngRoute", "ngResource", "hc.commonmark"]
 
 ###
 Authenticate interceptor
@@ -39,12 +39,13 @@ diary.config ["$routeProvider", ($routeProvider) ->
     .when "/diary/:diary_id?",
       controller: "diaryController"
       template: """<div data-ng-if="user.token">
-        <h1>{{user.first_name}}</h1>
-        <div class="post" data-ng-repeat="post in posts">
-          <h2>{{post.title}}</h2>
-          <div class="date">{{post.date}}</div>
-          <div class="text">{{post.body}}</div>
-        </div>
+        <article class="post" data-ng-repeat="post in posts">
+          <header>
+            <h1>{{post.title}}</h1>
+            <time datetime="{{post.date}}">{{post.date|date:'fullDate'}}</time>
+          </header>
+          <section data-common-mark="post.body"></section>
+        </article>
       </div>"""
 ]
 
