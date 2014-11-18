@@ -175,7 +175,7 @@ def delete_diary(user, diary_id):
 @mod.route("/diaries/<int:diary_id>/posts", methods=["GET"])
 @mod.route("/diaries/<int:diary_id>/posts/<int:page>", methods=["GET"])
 @authorized
-def read_posts(user, diary_id, page=0):
+def read_posts(user, diary_id, page=1):
   """
   Return all posts per diary for a specific user; sorted by date (DESC)
   """
@@ -188,7 +188,7 @@ def read_posts(user, diary_id, page=0):
     return unauth_resp
 
   result = []
-  for p in d.sorted_posts(10, page):
+  for p in d.sorted_posts(page):
     result.append(p.to_dict())
 
   return flask.jsonify({"posts": result})

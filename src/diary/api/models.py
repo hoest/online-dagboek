@@ -99,8 +99,8 @@ class Diary(diary.db.Model):
   # relations
   posts = diary.db.relationship("Post", lazy="dynamic")
 
-  def sorted_posts(self, limit, offset):
-    return self.posts.order_by(Post.date.desc(), Post.id.desc()).limit(limit).offset(offset).all()
+  def sorted_posts(self, page):
+    return self.posts.order_by(Post.date.desc(), Post.id.desc()).paginate(page, 10, False).items
 
   def to_dict(self):
     return {

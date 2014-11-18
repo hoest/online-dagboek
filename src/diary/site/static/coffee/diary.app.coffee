@@ -53,6 +53,9 @@ diary.config ["$routeProvider", ($routeProvider) ->
             </div>
           </aside>
         </article>
+        <p ng-hide="hideMore">
+          <a href ng-click="loadMore();">Laad meer...</a>
+        </p>
       </div>"""
 ]
 
@@ -60,11 +63,22 @@ diary.config ["$routeProvider", ($routeProvider) ->
 Diary controller
 ###
 diary.controller "diaryController", ["$scope", "$rootScope", "$routeParams", "$resource", ($scope, $rootScope, $routeParams, $resource) ->
-  Posts = $resource("/api/v1/diaries/#{$routeParams.diary_id}/posts")
+
   $scope.posts = []
-  Posts.get (data) ->
-    $scope.posts = data.posts
+  $scope.hideMore = false
   $scope.user = $rootScope.user
+
+  page = 1
+  $scope.loadMore = () ->
+    Posts = $resource("/api/v1/diaries/#{$routeParams.diary_id}/posts/#{page}")
+    Posts.get (data) ->
+      if data.posts.length > 0
+        $scope.posts = $scope.posts.concat data.posts
+      else
+        $scope.hideMore = true
+    page += 1
+
+  $scope.loadMore()
 ]
 
 ###
