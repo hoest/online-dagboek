@@ -13,7 +13,6 @@ diary.factory "diaryAuthenticate", ["$q", "$location", "$rootScope", ($q, $locat
     config.headers = config.headers or {}
     if $rootScope.user?.token?
       config.headers.Authorization = "Basic #{window.btoa("token:" + $rootScope.user.token)}"
-
     config or $q.when(config)
 
   requestError: (rejection) ->
@@ -25,7 +24,6 @@ diary.factory "diaryAuthenticate", ["$q", "$location", "$rootScope", ($q, $locat
   responseError: (rejection) ->
     if rejection?.status? and rejection.status is 401
       $location.path("/login")
-
     $q.reject(rejection)
 ]
 
@@ -40,7 +38,14 @@ diary.config ["$routeProvider", ($routeProvider) ->
   $routeProvider
     .when "/diary/:diary_id?",
       controller: "diaryController"
-      templateUrl: "/site/static/templates/posts.html"
+      template: """<div data-ng-if="user.token">
+        <h1>{{user.first_name}}</h1>
+        <div class="post" data-ng-repeat="post in posts">
+          <h2>{{post.title}}</h2>
+          <div class="date">{{post.date}}</div>
+          <div class="text">{{post.body}}</div>
+        </div>
+      </div>"""
 ]
 
 ###
@@ -51,7 +56,6 @@ diary.controller "diaryController", ["$scope", "$rootScope", "$routeParams", "$r
   $scope.posts = []
   Posts.get (data) ->
     $scope.posts = data.posts
-
   $scope.user = $rootScope.user
 ]
 
@@ -60,10 +64,9 @@ Navigation
 ###
 diary.directive "diaryNavigation", ->
   restrict: "A"
-
   template: """<ul>
     <li><a href="#/">Home</a></li>
-    <li ng-if="user.token">Dagboeken<subitems data-diary-list /></li>
+    <li data-ng-if="user.token">Dagboeken<subitems data-diary-list /></li>
     <li><a href="#/over-deze-site">Over deze site</a></li>
   </ul>"""
 
@@ -75,10 +78,15 @@ diary.directive "diaryContent", ["$rootScope", "$resource", ($rootScope, $resour
     $scope.user = $rootScope.user
 
   restrict: "A"
-
-  template: """<div ng-if="user.token">
-    <p>Welkom {{user.first_name}} ({{user.id}})</p>
-    <div data-ng-view></div>
+  template: """<div>
+    <div data-ng-if="user.token">
+      <p>Welkom {{user.first_name}} ({{user.id}})</p>
+      <div data-facebook-picture></div>
+      <div data-ng-view></div>
+    </div>
+    <div data-ng-hide="user.token">
+      <p>Je dient in te loggen met behulp van je Facebook-account.</p>
+    </div>
   </div>"""
 ]
 
@@ -88,17 +96,14 @@ diary.directive "diaryList", ["$resource", "$location", ($resource, $location) -
     $scope.diaries = []
     Diaries.get (data) ->
       $scope.diaries = data.diaries
-
     $scope.open = (id) ->
       $location.path("/diary/#{id}")
 
   restrict: "A"
-
   replace: true
-
   template: """<ul>
     <li data-ng-repeat="diary in diaries">
-      <a href ng-click="open(diary.id)">{{diary.title}}</a>
+      <a href data-ng-click="open(diary.id)">{{diary.title}}</a>
     </li>
   </ul>"""
 ]
@@ -117,10 +122,9 @@ diary.directive "facebookPicture", ["$rootScope", ($rootScope) ->
     $scope.user = $rootScope.user
 
   restrict: "A"
-
-  template: """<div class="facebook-picture" ng-if="user.token">
-    <a href="//www.facebook.com/{{user.id}}">
-      <img src="//graph.facebook.com/{{user.id}}/picture"
+  template: """<div class="facebook-picture" data-ng-if="user.token">
+    <a ng-href="//www.facebook.com/{{user.id}}">
+      <img data-ng-src="//graph.facebook.com/{{user.id}}/picture"
            alt="Profielfoto van {{user.first_name}}"
            title="Profielfoto van {{user.first_name}}" />
     </a>
