@@ -32,6 +32,13 @@ diary.config ["$httpProvider", ($httpProvider) ->
 ]
 
 ###
+Disable some $compile stuff: debugInfo
+###
+diary.config ["$compileProvider", ($compileProvider) ->
+  $compileProvider.debugInfoEnabled false
+]
+
+###
 Routes
 ###
 diary.config ["$routeProvider", ($routeProvider) ->
@@ -53,8 +60,8 @@ diary.config ["$routeProvider", ($routeProvider) ->
             </div>
           </aside>
         </article>
-        <p ng-hide="hideMore">
-          <a href ng-click="loadMore();">Laad meer...</a>
+        <p data-ng-hide="hideMore">
+          <a href data-ng-click="loadMore();">Laad meer...</a>
         </p>
       </div>"""
 ]
@@ -63,7 +70,6 @@ diary.config ["$routeProvider", ($routeProvider) ->
 Diary controller
 ###
 diary.controller "diaryController", ["$scope", "$rootScope", "$routeParams", "$resource", ($scope, $rootScope, $routeParams, $resource) ->
-
   $scope.posts = []
   $scope.hideMore = false
   $scope.user = $rootScope.user
@@ -96,8 +102,8 @@ diary.directive "diaryNavigation", ->
 Content
 ###
 diary.directive "diaryContent", ["$rootScope", "$resource", ($rootScope, $resource) ->
-  controller: ($scope) ->
-    $scope.user = $rootScope.user
+  link: (scope, element, attr) ->
+    scope.user = $rootScope.user
 
   restrict: "A"
   template: """<div>
@@ -113,12 +119,12 @@ diary.directive "diaryContent", ["$rootScope", "$resource", ($rootScope, $resour
 ]
 
 diary.directive "diaryList", ["$resource", "$location", ($resource, $location) ->
-  controller: ($scope) ->
+  link: (scope, element, attr) ->
     Diaries = $resource("/api/v1/diaries")
-    $scope.diaries = []
+    scope.diaries = []
     Diaries.get (data) ->
-      $scope.diaries = data.diaries
-    $scope.open = (id) ->
+      scope.diaries = data.diaries
+    scope.open = (id) ->
       $location.path("/diary/#{id}")
 
   restrict: "A"
@@ -140,8 +146,8 @@ diary.directive "diaryFooter", ->
 Facebook picture
 ###
 diary.directive "facebookPicture", ["$rootScope", ($rootScope) ->
-  controller: ($scope) ->
-    $scope.user = $rootScope.user
+  link: (scope, element, attr) ->
+    scope.user = $rootScope.user
 
   restrict: "A"
   template: """<div class="facebook-picture" data-ng-if="user.token">
@@ -152,3 +158,10 @@ diary.directive "facebookPicture", ["$rootScope", ($rootScope) ->
     </a>
   </div>"""
 ]
+
+###
+ngApp bootstrap
+###
+angular.element(document).ready ->
+  angular.bootstrap document, ["diary"],
+    ngStrictDi: true
