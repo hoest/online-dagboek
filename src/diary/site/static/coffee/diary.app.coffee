@@ -46,14 +46,14 @@ diary.config ["$routeProvider", ($routeProvider) ->
     .when "/diary/:diary_id?",
       controller: "diaryController"
       template: """<div data-ng-if="user.token">
-        <article class="post" data-ng-repeat="post in posts">
+        <article class="post" data-ng-repeat="post in posts track by post.id">
           <header>
             <h1>{{post.title}}</h1>
             <time datetime="{{post.date}}">{{post.date|date:'fullDate'}}</time>
           </header>
           <section data-common-mark="post.body"></section>
           <aside data-ng-if="post.pictures.length != 0">
-            <div class="image" data-ng-repeat="pic in post.pictures">
+            <div class="image" data-ng-repeat="pic in post.pictures track by pic.id">
               <a data-ng-href="{{pic.file_url}}">
                 <img data-ng-src="{{pic.thumb_url}}" alt="{{pic.title}}" title="{{pic.title}}" />
               </a>
@@ -130,7 +130,7 @@ diary.directive "diaryList", ["$resource", "$location", ($resource, $location) -
   restrict: "A"
   replace: true
   template: """<ul>
-    <li data-ng-repeat="diary in diaries">
+    <li data-ng-repeat="diary in diaries track by diary.id">
       <a href data-ng-click="open(diary.id)">{{diary.title}}</a>
     </li>
   </ul>"""
