@@ -39,6 +39,16 @@ diary.config ["$compileProvider", ($compileProvider) ->
 ]
 
 ###
+$locationProvider settings
+###
+diary.config ["$locationProvider", ($locationProvider) ->
+  $locationProvider.html5Mode
+    "enabled": true
+    "requireBase": true
+  $locationProvider.hashPrefix("!")
+]
+
+###
 Routes
 ###
 diary.config ["$routeProvider", ($routeProvider) ->
@@ -93,9 +103,9 @@ Navigation
 diary.directive "diaryNavigation", ->
   restrict: "A"
   template: """<ul>
-    <li><a href="#/">Home</a></li>
+    <li><a href="/site/">Home</a></li>
     <li data-ng-if="user.token">Dagboeken<subitems data-diary-list /></li>
-    <li><a href="#/over-deze-site">Over deze site</a></li>
+    <li><a href="/site/over-deze-site">Over deze site</a></li>
   </ul>"""
 
 ###
@@ -124,14 +134,12 @@ diary.directive "diaryList", ["$resource", "$location", ($resource, $location) -
     scope.diaries = []
     Diaries.get (data) ->
       scope.diaries = data.diaries
-    scope.open = (id) ->
-      $location.path("/diary/#{id}")
 
   restrict: "A"
   replace: true
   template: """<ul>
     <li data-ng-repeat="diary in diaries track by diary.id">
-      <a href data-ng-click="open(diary.id)">{{diary.title}}</a>
+      <a href="/site/diary/{{diary.id}}">{{diary.title}}</a>
     </li>
   </ul>"""
 ]
@@ -140,7 +148,7 @@ diary.directive "diaryList", ["$resource", "$location", ($resource, $location) -
 Footer
 ###
 diary.directive "diaryFooter", ->
-  template: """<p>&#169; 2014 - <a href="http://www.online-dagboek.nl/">www.online-dagboek.nl</a></p>"""
+  template: """<p>&#169; 2014 - <a href="http://www.online-dagboek.nl">www.online-dagboek.nl</a></p>"""
 
 ###
 Facebook picture
